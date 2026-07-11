@@ -14,6 +14,8 @@ class GameScene: SKScene {
     var player: SKSpriteNode!
     var playerGridPos = (x: GameConstants.gridWidth / 2, y: GameConstants.gridHeight / 2)
     
+    var enemies: [Enemy] = []
+    
     override func didMove(to view: SKView) {
         backgroundColor = .black
         
@@ -21,6 +23,7 @@ class GameScene: SKScene {
         grid = generator.generate()
         renderGrid()
         setupPlayer()
+        spawnEnemies()
     }
     
     func makeTestGrid() -> [[TileType]] {
@@ -83,6 +86,8 @@ class GameScene: SKScene {
         
         playerGridPos = (newX, newY)
         updatePlayerPosition()
+        
+        processEnemyTurn()
     }
     
     override func keyDown(with event: NSEvent) {
@@ -92,6 +97,40 @@ class GameScene: SKScene {
         case 125: tryMovePlayer(dx: 0, dy: -1) // down
         case 126: tryMovePlayer(dx: 0, dy: 1) // up
         default: break
+        }
+    }
+    
+    func spawnEnemies(count: Int = 3){
+        var spawned = 0
+        var attempts = 0
+        
+        while spawned < count && attempts < 100 {
+            attempts += 1
+            let x = Int.random(in: 1..<(GameConstants.gridWidth - 1))
+            let y = Int.random(in: 1..<(GameConstants.gridHeight - 1))
+            
+            guard grid[y][x] == .floor else { continue }
+            guard (x, y) != (playerGridPos.x, playerGridPos.y) else { continue }
+            
+            let enemy = Enemy(gridPos: (x, y))
+            enemies.append(enemy)
+            addChild(enemy.node)
+            spawned += 1
+        }
+    }
+    
+    func processEnemyTurn(){
+        for enemy in enemies {
+            let directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            let move = directions.randomElement()!
+            let newX = enemy.gridPos.x + move.0
+            let newY = enemy.gridPos.y + move.1
+            
+            guard newY >= 0, newY < GameConstants.gridHeight, newX >= 0, newX < GameConstants.gridWidth else { continue }
+            guard grid[newY][newX] != .wall else { continue }
+            
+            enemy.gridPos = (newX, newY)
+            enemy.updateNodePosition()
         }
     }
 }
