@@ -17,8 +17,12 @@ class ViewController: NSViewController {
         super.viewDidLoad()
 
         if let view = self.skView {
-            let scene = GameScene(size: view.bounds.size)
-            scene.scaleMode = .resizeFill
+            let sceneSize = CGSize(
+                width: CGFloat(GameConstants.gridWidth) * GameConstants.tileSize,
+                height: CGFloat(GameConstants.gridHeight) * GameConstants.tileSize
+            )
+            let scene = GameScene(size: sceneSize)
+            scene.scaleMode = .aspectFit
             
             view.presentScene(scene)
             
