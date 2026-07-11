@@ -46,13 +46,15 @@ class GameScene: SKScene {
         for y in 0..<GameConstants.gridHeight {
             for x in 0..<GameConstants.gridWidth {
                 let tile = grid[y][x]
-                let color: NSColor = (tile == .wall) ? .darkGray : .lightGray
                 
-                let node = SKSpriteNode(color: color, size: CGSize(width: GameConstants.tileSize, height: GameConstants.tileSize))
+                let node = SKSpriteNode(imageNamed: tile.imageName)
+                node.size = CGSize(width: GameConstants.tileSize, height: GameConstants.tileSize)
                 node.position = CGPoint(
                     x: CGFloat(x) * GameConstants.tileSize + GameConstants.tileSize / 2,
                     y: CGFloat(y) * GameConstants.tileSize + GameConstants.tileSize / 2
                 )
+                node.texture?.filteringMode = .nearest
+                node.zPosition = 0
                 addChild(node)
             }
         }
@@ -60,6 +62,7 @@ class GameScene: SKScene {
     
     func setupPlayer() {
         player = SKSpriteNode(color: .systemRed, size: CGSize(width: GameConstants.tileSize - 4, height: GameConstants.tileSize - 4))
+        player.zPosition = 10
         updatePlayerPosition()
         addChild(player)
     }

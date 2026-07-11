@@ -8,4 +8,11 @@
 enum TileType{
     case floor
     case wall
+    
+    var imageName: String{
+        switch self {
+        case .floor: return "tile_floor"
+        case .wall: return "tile_wall"
+        }
+    }
 }
