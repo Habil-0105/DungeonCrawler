@@ -137,7 +137,12 @@ class GameScene: SKScene {
             
             if isAdjacent {
                 playerHP -= enemy.attackPower
-                print("Enemy attacks player, player HP: \(playerHP)")
+                
+                let direction = (dx: playerGridPos.x - enemy.gridPos.x, dy: playerGridPos.y - enemy.gridPos.y)
+                applyWithFlash(to: player)
+                applyKnockBack(to: player, direction: direction)
+                showDamageNumber(enemy.attackPower, at: player.position)
+                
                 checkPlayerDeath()
                 continue
             }
@@ -159,7 +164,11 @@ class GameScene: SKScene {
     
     func attackEnemy(_ enemy: Enemy){
         enemy.hp -= playerAttackPower
-        print("Player attacks enemy, enemy HP: \(enemy.hp)")
+        
+        let direction = (dx: enemy.gridPos.x - playerGridPos.x, dy: enemy.gridPos.y - playerGridPos.y)
+        applyWithFlash(to: enemy.node)
+        applyKnockBack(to: enemy.node, direction: direction)
+        showDamageNumber(playerAttackPower, at: enemy.node.position)
         
         if enemy.hp <= 0 {
             enemy.node.removeFromParent()
@@ -172,5 +181,33 @@ class GameScene: SKScene {
         if playerHP <= 0 {
             print("Player died. Game Over")
         }
+    }
+    
+    func applyWithFlash(to node: SKSpriteNode){
+        let flashWhite = SKAction.colorize(with: .white, colorBlendFactor: 1.0, duration: 0.05)
+        let flashBack = SKAction.colorize(withColorBlendFactor: 0.0, duration: 0.1)
+        node.run(SKAction.sequence([flashWhite, flashBack]))
+    }
+    
+    func applyKnockBack(to node: SKSpriteNode, direction: (dx: Int, dy: Int)){
+        let offset = CGVector(dx: CGFloat(direction.dx) * 8, dy: CGFloat(direction.dy) * 8)
+        let knockOut = SKAction.move(by: offset, duration: 0.05)
+        let knockBack = SKAction.move(by: CGVector(dx: -offset.dx, dy: -offset.dy), duration: 0.1)
+        node.run(SKAction.sequence([knockOut, knockBack]))
+    }
+    
+    func showDamageNumber(_ amount: Int, at position: CGPoint){
+        let label = SKLabelNode(text: "\(amount)")
+        label.fontName = "Menlo-Bold"
+        label.fontSize = 14
+        label.fontColor = .red
+        label.position = CGPoint(x: position.x, y: position.y + GameConstants.tileSize / 2)
+        label.zPosition = 20
+        addChild(label)
+        
+        let moveUp = SKAction.moveBy(x: 0, y: 20, duration: 0.6)
+        let fadeOut = SKAction.fadeOut(withDuration: 0.6)
+        let remove = SKAction.removeFromParent()
+        label.run(SKAction.sequence([SKAction.group([moveUp, fadeOut]), remove]))
     }
 }
