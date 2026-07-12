@@ -120,6 +120,7 @@ class GameScene: SKScene {
             
             guard grid[y][x] == .floor else { continue }
             guard (x, y) != (playerGridPos.x, playerGridPos.y) else { continue }
+            guard !enemies.contains(where: { $0.gridPos == (x, y) }) else { continue }
             
             let enemy = Enemy(gridPos: (x, y))
             enemies.append(enemy)
@@ -149,6 +150,7 @@ class GameScene: SKScene {
             guard newY >= 0, newY < GameConstants.gridHeight, newX >= 0, newX < GameConstants.gridWidth else { continue }
             guard grid[newY][newX] != .wall else { continue }
             guard (newX, newY) != (playerGridPos.x, playerGridPos.y) else { continue }
+            guard !enemies.contains(where: { $0 !== enemy && $0.gridPos == (newX, newY) }) else { continue }
             
             enemy.gridPos = (newX, newY)
             enemy.updateNodePosition()
