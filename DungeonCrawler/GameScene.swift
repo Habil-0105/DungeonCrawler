@@ -16,6 +16,9 @@ class GameScene: SKScene {
     
     var enemies: [Enemy] = []
     
+    var playerHP = 10
+    let playerAttackPower = 2
+    
     override func didMove(to view: SKView) {
         backgroundColor = .black
         
@@ -64,8 +67,10 @@ class GameScene: SKScene {
     }
     
     func setupPlayer() {
-        player = SKSpriteNode(color: .systemRed, size: CGSize(width: GameConstants.tileSize - 4, height: GameConstants.tileSize - 4))
+        player = SKSpriteNode(imageNamed: "player_idle")
+        player.size = CGSize(width: GameConstants.tileSize, height: GameConstants.tileSize)
         player.zPosition = 10
+        player.texture?.filteringMode = .nearest
         updatePlayerPosition()
         addChild(player)
     }
@@ -84,8 +89,12 @@ class GameScene: SKScene {
         guard newY >= 0, newY < GameConstants.gridHeight, newX >= 0, newX < GameConstants.gridWidth else { return }
         guard grid[newY][newX] != .wall else { return }
         
-        playerGridPos = (newX, newY)
-        updatePlayerPosition()
+        if let targetEnemy = enemies.first(where: {$0.gridPos == (newX, newY)}){
+            attackEnemy(targetEnemy)
+        } else {
+            playerGridPos = (newX, newY)
+            updatePlayerPosition()
+        }
         
         processEnemyTurn()
     }
@@ -121,6 +130,17 @@ class GameScene: SKScene {
     
     func processEnemyTurn(){
         for enemy in enemies {
+            let dx = abs(enemy.gridPos.x - playerGridPos.x)
+            let dy = abs(enemy.gridPos.y - playerGridPos.y)
+            let isAdjacent = (dx == 1 && dy == 0) || (dx == 0 && dy == 1)
+            
+            if isAdjacent {
+                playerHP -= enemy.attackPower
+                print("Enemy attacks player, player HP: \(playerHP)")
+                checkPlayerDeath()
+                continue
+            }
+            
             let directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
             let move = directions.randomElement()!
             let newX = enemy.gridPos.x + move.0
@@ -128,9 +148,27 @@ class GameScene: SKScene {
             
             guard newY >= 0, newY < GameConstants.gridHeight, newX >= 0, newX < GameConstants.gridWidth else { continue }
             guard grid[newY][newX] != .wall else { continue }
+            guard (newX, newY) != (playerGridPos.x, playerGridPos.y) else { continue }
             
             enemy.gridPos = (newX, newY)
             enemy.updateNodePosition()
+        }
+    }
+    
+    func attackEnemy(_ enemy: Enemy){
+        enemy.hp -= playerAttackPower
+        print("Player attacks enemy, enemy HP: \(enemy.hp)")
+        
+        if enemy.hp <= 0 {
+            enemy.node.removeFromParent()
+            enemies.removeAll { $0 === enemy }
+            print("Enemy defeated!")
+        }
+    }
+    
+    func checkPlayerDeath(){
+        if playerHP <= 0 {
+            print("Player died. Game Over")
         }
     }
 }
