@@ -154,6 +154,9 @@ class GameScene: SKScene {
                 continue
             }
             
+            let distance = abs(enemy.gridPos.x - playerGridPos.x) + abs(enemy.gridPos.y - playerGridPos.y)
+            guard distance <= 6 else { continue }
+            
             guard let step = pathfinder.nextStep(from: enemy.gridPos, to: playerGridPos) else { continue }
             
             let newX = enemy.gridPos.x + step.dx
