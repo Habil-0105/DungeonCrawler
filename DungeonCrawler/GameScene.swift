@@ -108,7 +108,12 @@ class GameScene: SKScene {
     }
     
     override func keyDown(with event: NSEvent) {
-        guard !isGameOver else { return }
+        if isGameOver {
+            if event.keyCode == 15 {
+                restartGame()
+            }
+            return
+        }
         
         switch event.keyCode {
         case 123: tryMovePlayer(dx: -1, dy: 0) // left
@@ -117,6 +122,22 @@ class GameScene: SKScene {
         case 126: tryMovePlayer(dx: 0, dy: 1) // up
         default: break
         }
+    }
+    
+    func restartGame(){
+        removeAllChildren()
+        isGameOver = false
+        playerHP = 10
+        comboCount = 0
+        enemies = []
+        
+        let generator = DungeonGenerator(width: GameConstants.gridWidth, height: GameConstants.gridHeight)
+        grid = generator.generate()
+        playerGridPos = (x: GameConstants.gridWidth / 2, y: GameConstants.gridHeight / 2)
+        
+        renderGrid()
+        setupPlayer()
+        spawnEnemies()
     }
     
     func spawnEnemies(count: Int = 3){
@@ -388,9 +409,9 @@ class GameScene: SKScene {
     }
     
     func showGameOverText(){
-        let label = SKLabelNode(text: "GAME OVER")
+        let label = SKLabelNode(text: "GAME OVER - Press R to Restart")
         label.fontName = "Menlo-Bold"
-        label.fontSize = 28
+        label.fontSize = 20
         label.fontColor = .systemRed
         label.position = CGPoint(x: size.width / 2, y: size.height / 2)
         label.zPosition = 30
