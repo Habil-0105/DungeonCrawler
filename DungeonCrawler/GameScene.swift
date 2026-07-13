@@ -134,6 +134,8 @@ class GameScene: SKScene {
     }
     
     func processEnemyTurn(){
+        let pathfinder = Pathfinder(grid: grid, width: GameConstants.gridWidth, height: GameConstants.gridHeight)
+        
         for enemy in enemies {
             let dx = abs(enemy.gridPos.x - playerGridPos.x)
             let dy = abs(enemy.gridPos.y - playerGridPos.y)
@@ -152,14 +154,11 @@ class GameScene: SKScene {
                 continue
             }
             
-            let directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-            let move = directions.randomElement()!
-            let newX = enemy.gridPos.x + move.0
-            let newY = enemy.gridPos.y + move.1
+            guard let step = pathfinder.nextStep(from: enemy.gridPos, to: playerGridPos) else { continue }
             
-            guard newY >= 0, newY < GameConstants.gridHeight, newX >= 0, newX < GameConstants.gridWidth else { continue }
-            guard grid[newY][newX] != .wall else { continue }
-            guard (newX, newY) != (playerGridPos.x, playerGridPos.y) else { continue }
+            let newX = enemy.gridPos.x + step.dx
+            let newY = enemy.gridPos.y + step.dy
+            
             guard !enemies.contains(where: { $0 !== enemy && $0.gridPos == (newX, newY) }) else { continue }
             
             enemy.gridPos = (newX, newY)
