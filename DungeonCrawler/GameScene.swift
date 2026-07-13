@@ -95,6 +95,7 @@ class GameScene: SKScene {
             playerGridPos = (newX, newY)
             updatePlayerPosition()
             player.run(makeWalkAnimation(imageName: "player_walk", frameCount: 4))
+            run(SKAction.playSoundFileNamed("step.wav", waitForCompletion: false))
         }
         
         processEnemyTurn()
@@ -165,6 +166,7 @@ class GameScene: SKScene {
     }
     
     func attackEnemy(_ enemy: Enemy){
+        run(SKAction.playSoundFileNamed("attack.wav", waitForCompletion: false))
         enemy.hp -= playerAttackPower
         
         let direction = (dx: enemy.gridPos.x - playerGridPos.x, dy: enemy.gridPos.y - playerGridPos.y)
@@ -173,9 +175,12 @@ class GameScene: SKScene {
         showDamageNumber(playerAttackPower, at: enemy.node.position)
         
         if enemy.hp <= 0 {
+            let deathPosition = enemy.node.position
             enemy.node.removeFromParent()
             enemies.removeAll { $0 === enemy }
-            print("Enemy defeated!")
+            shakeScreen(intensity: 8, duration: 0.15)
+            spawnDeathParticles(at: deathPosition)
+            run(SKAction.playSoundFileNamed("enemy_death.wav", waitForCompletion: false))
         }
     }
     
@@ -226,5 +231,52 @@ class GameScene: SKScene {
         }
         
         return SKAction.animate(with: textures, timePerFrame: 0.15)
+    }
+    
+    func shakeScreen(intensity: CGFloat = 6, duration: TimeInterval = 0.2){
+        guard let cam = camera else {
+            let originalPosition = position
+            var actions: [SKAction] = []
+            let steps = 6
+            for _ in 0..<steps {
+                let dx = CGFloat.random(in: -intensity...intensity)
+                let dy = CGFloat.random(in: -intensity...intensity)
+                actions.append(SKAction.move(by: CGVector(dx: dx, dy: dy), duration: duration / Double(steps)))
+            }
+            actions.append(SKAction.move(to: originalPosition, duration: duration / Double(steps)))
+            run(SKAction.sequence(actions))
+            return
+        }
+        let originalPosition = cam.position
+        var actions: [SKAction] = []
+        let steps = 6
+        for _ in 0..<steps{
+            let dx = CGFloat.random(in: -intensity...intensity)
+            let dy = CGFloat.random(in: -intensity...intensity)
+            actions.append(SKAction.move(by: CGVector(dx: dx, dy: dy), duration: duration / Double(steps)))
+        }
+        actions.append(SKAction.move(to: originalPosition, duration: duration / Double(steps)))
+        cam.run(SKAction.sequence(actions))
+    }
+    
+    func spawnDeathParticles(at position: CGPoint, color: NSColor = .systemGreen) {
+        for _ in 0..<8{
+            let particle = SKShapeNode(circleOfRadius: 2)
+            particle.fillColor = color
+            particle.strokeColor = .clear
+            particle.position = position
+            particle.zPosition = 15
+            addChild(particle)
+            
+            let angle = CGFloat.random(in: 0...(2 * .pi))
+            let distance = CGFloat.random(in: 15...30)
+            let dx = cos(angle) * distance
+            let dy = sin(angle) * distance
+            
+            let move = SKAction.move(by: CGVector(dx: dx, dy: dy), duration: 0.3)
+            let fade = SKAction.fadeOut(withDuration: 0.3)
+            let remove = SKAction.removeFromParent()
+            particle.run(SKAction.sequence([SKAction.group([move, fade]), remove]))
+        }
     }
 }
