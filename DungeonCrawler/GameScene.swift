@@ -126,7 +126,8 @@ class GameScene: SKScene {
             guard (x, y) != (playerGridPos.x, playerGridPos.y) else { continue }
             guard !enemies.contains(where: { $0.gridPos == (x, y) }) else { continue }
             
-            let enemy = Enemy(gridPos: (x, y))
+            let type = EnemyType.allCases.randomElement()!
+            let enemy = Enemy(gridPos: (x, y), type: type)
             enemies.append(enemy)
             addChild(enemy.node)
             spawned += 1
@@ -139,35 +140,71 @@ class GameScene: SKScene {
         for enemy in enemies {
             let dx = abs(enemy.gridPos.x - playerGridPos.x)
             let dy = abs(enemy.gridPos.y - playerGridPos.y)
+            let distance = dx + dy
             let isAdjacent = (dx == 1 && dy == 0) || (dx == 0 && dy == 1)
+            let isLowHP = enemy.hp <= enemy.maxHP / 3
             
-            if isAdjacent {
+            if isAdjacent && !(enemy.type == .coward && isLowHP) {
                 playerHP -= enemy.attackPower
                 comboCount = 0
-                
                 let direction = (dx: playerGridPos.x - enemy.gridPos.x, dy: playerGridPos.y - enemy.gridPos.y)
                 applyWithFlash(to: player)
                 applyKnockBack(to: player, direction: direction)
                 showDamageNumber(enemy.attackPower, at: player.position)
-                
                 checkPlayerDeath()
                 continue
             }
             
-            let distance = abs(enemy.gridPos.x - playerGridPos.x) + abs(enemy.gridPos.y - playerGridPos.y)
-            guard distance <= 6 else { continue }
+            guard distance <= enemy.detectionRadius else { continue }
             
-            guard let step = pathfinder.nextStep(from: enemy.gridPos, to: playerGridPos) else { continue }
+            var step: (dx: Int, dy: Int)?
             
-            let newX = enemy.gridPos.x + step.dx
-            let newY = enemy.gridPos.y + step.dy
+            switch enemy.type {
+            case .chaser:
+                step = pathfinder.nextStep(from: enemy.gridPos, to: playerGridPos)
+            case .guardian:
+                step = nil
+            case .coward:
+                if isLowHP {
+                    step = fleeDirection(from: enemy.gridPos, awayFrom: playerGridPos)
+                } else {
+                    step = pathfinder.nextStep(from: enemy.gridPos, to: playerGridPos)
+                }
+            }
             
+            guard let move = step else { continue }
+            let newX = enemy.gridPos.x + move.dx
+            let newY = enemy.gridPos.y + move.dy
+            
+            guard newX >= 0, newX < GameConstants.gridWidth, newY >= 0, newY < GameConstants.gridHeight else { continue }
+            guard grid[newY][newX] != .wall else { continue }
             guard !enemies.contains(where: { $0 !== enemy && $0.gridPos == (newX, newY) }) else { continue }
             
             enemy.gridPos = (newX, newY)
             enemy.updateNodePosition()
             enemy.node.run(makeWalkAnimation(imageName: "enemy_walk", frameCount: 4))
         }
+    }
+    
+    func fleeDirection(from pos: (x: Int, y: Int), awayFrom target: (x: Int, y: Int)) -> (dx: Int, dy: Int)? {
+        let directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        var bestDir: (Int, Int)?
+        var bestDistance = -1
+        
+        for dir in directions {
+            let next = (x: pos.x + dir.0, y: pos.y + dir.1)
+            guard next.x >= 0, next.x < GameConstants.gridWidth, next.y >= 0, next.y < GameConstants.gridHeight else { continue }
+            guard grid[next.y][next.x] != .wall else { continue }
+            
+            let dist = abs(next.x - target.x) + abs(next.y - target.y)
+            if dist > bestDistance {
+                bestDistance = dist
+                bestDir = dir
+            }
+        }
+        
+        guard let dir = bestDir else { return nil }
+        return (dx: dir.0, dy: dir.1)
     }
     
     func attackEnemy(_ enemy: Enemy){
