@@ -94,6 +94,7 @@ class GameScene: SKScene {
         } else {
             playerGridPos = (newX, newY)
             updatePlayerPosition()
+            player.run(makeWalkAnimation(imageName: "player_walk", frameCount: 4))
         }
         
         processEnemyTurn()
@@ -209,5 +210,20 @@ class GameScene: SKScene {
         let fadeOut = SKAction.fadeOut(withDuration: 0.6)
         let remove = SKAction.removeFromParent()
         label.run(SKAction.sequence([SKAction.group([moveUp, fadeOut]), remove]))
+    }
+    
+    func makeWalkAnimation(imageName: String, frameCount: Int) -> SKAction{
+        let sheet = SKTexture(imageNamed: imageName)
+        var textures: [SKTexture] = []
+        
+        let frameWidth = 1.0 / CGFloat(frameCount)
+        for i in 0..<frameCount {
+            let rect = CGRect(x: CGFloat(i) * frameWidth, y: 0, width: frameWidth, height: 1.0)
+            let frameTexture = SKTexture(rect: rect, in: sheet)
+            frameTexture.filteringMode = .nearest
+            textures.append(frameTexture)
+        }
+        
+        return SKAction.animate(with: textures, timePerFrame: 0.15)
     }
 }
