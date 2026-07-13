@@ -19,6 +19,8 @@ class GameScene: SKScene {
     var playerHP = 10
     let playerAttackPower = 2
     
+    var comboCount = 0
+    
     override func didMove(to view: SKView) {
         backgroundColor = .black
         
@@ -139,6 +141,7 @@ class GameScene: SKScene {
             
             if isAdjacent {
                 playerHP -= enemy.attackPower
+                comboCount = 0
                 
                 let direction = (dx: playerGridPos.x - enemy.gridPos.x, dy: playerGridPos.y - enemy.gridPos.y)
                 applyWithFlash(to: player)
@@ -167,12 +170,20 @@ class GameScene: SKScene {
     
     func attackEnemy(_ enemy: Enemy){
         run(SKAction.playSoundFileNamed("attack.wav", waitForCompletion: false))
-        enemy.hp -= playerAttackPower
+        
+        let isCrit = Double.random(in: 0...1) < GameConstants.critChance
+        let damage = isCrit ? playerAttackPower * GameConstants.critMultiplier : playerAttackPower
+        enemy.hp -= damage
         
         let direction = (dx: enemy.gridPos.x - playerGridPos.x, dy: enemy.gridPos.y - playerGridPos.y)
         applyWithFlash(to: enemy.node)
         applyKnockBack(to: enemy.node, direction: direction)
-        showDamageNumber(playerAttackPower, at: enemy.node.position)
+        
+        if isCrit {
+            showCritDamageNumber(playerAttackPower, at: enemy.node.position)
+        } else {
+            showDamageNumber(playerAttackPower, at: enemy.node.position)
+        }
         
         if enemy.hp <= 0 {
             let deathPosition = enemy.node.position
@@ -181,6 +192,9 @@ class GameScene: SKScene {
             shakeScreen(intensity: 8, duration: 0.15)
             spawnDeathParticles(at: deathPosition)
             run(SKAction.playSoundFileNamed("enemy_death.wav", waitForCompletion: false))
+            
+            comboCount += 1
+            showComboText()
         }
     }
     
@@ -216,6 +230,28 @@ class GameScene: SKScene {
         let fadeOut = SKAction.fadeOut(withDuration: 0.6)
         let remove = SKAction.removeFromParent()
         label.run(SKAction.sequence([SKAction.group([moveUp, fadeOut]), remove]))
+    }
+    
+    func showCritDamageNumber(_ amount: Int, at position: CGPoint){
+        let label = SKLabelNode(text: "\(amount)!")
+        label.fontName = "Menlo-Bold"
+        label.fontSize = 22
+        label.fontColor = .systemOrange
+        label.position = CGPoint(x: position.x, y: position.y + GameConstants.tileSize / 2)
+        label.zPosition = 20
+        addChild(label)
+        
+        let scaleIn = SKAction.scale(to: 1.4, duration: 0.08)
+        let scaleBack = SKAction.scale(to: 1.0, duration: 0.1)
+        let moveUp = SKAction.moveBy(x: 0, y: 25, duration: 0.6)
+        let fadeOut = SKAction.fadeOut(withDuration: 0.6)
+        let remove = SKAction.removeFromParent()
+        
+        label.run(SKAction.sequence([
+            SKAction.sequence([scaleIn, scaleBack]),
+            SKAction.group([moveUp, fadeOut]),
+            remove
+        ]))
     }
     
     func makeWalkAnimation(imageName: String, frameCount: Int) -> SKAction{
@@ -278,5 +314,29 @@ class GameScene: SKScene {
             let remove = SKAction.removeFromParent()
             particle.run(SKAction.sequence([SKAction.group([move, fade]), remove]))
         }
+    }
+    
+    func showComboText(){
+        guard comboCount >= 2 else { return }
+        
+        let label = SKLabelNode(text: "\(comboCount)x COMBO!")
+        label.fontName = "Menlo-Bold"
+        label.fontSize = 16
+        label.color = .systemYellow
+        label.position = CGPoint(x: player.position.x, y: player.position.y + GameConstants.tileSize)
+        label.zPosition = 20
+        addChild(label)
+        
+        let scaleUp = SKAction.scale(to: 1.3, duration: 0.1)
+        let scaleDown = SKAction.scale(to: 1.0, duration: 0.1)
+        let moveUp = SKAction.moveBy(x: 0, y: 25, duration: 0.5)
+        let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+        let remove = SKAction.removeFromParent()
+        
+        label.run(SKAction.sequence([
+            SKAction.sequence([scaleUp, scaleDown]),
+            SKAction.group([moveUp, fadeOut]),
+            remove
+        ]))
     }
 }
