@@ -21,6 +21,8 @@ class GameScene: SKScene {
     
     var comboCount = 0
     
+    var isGameOver = false
+    
     override func didMove(to view: SKView) {
         backgroundColor = .black
         
@@ -85,6 +87,8 @@ class GameScene: SKScene {
     }
     
     func tryMovePlayer(dx: Int, dy: Int){
+        guard !isGameOver else { return }
+        
         let newX = playerGridPos.x + dx
         let newY = playerGridPos.y + dy
         
@@ -104,6 +108,8 @@ class GameScene: SKScene {
     }
     
     override func keyDown(with event: NSEvent) {
+        guard !isGameOver else { return }
+        
         switch event.keyCode {
         case 123: tryMovePlayer(dx: -1, dy: 0) // left
         case 124: tryMovePlayer(dx: 1, dy: 0) // right
@@ -238,8 +244,10 @@ class GameScene: SKScene {
     }
     
     func checkPlayerDeath(){
-        if playerHP <= 0 {
+        if playerHP <= 0 && !isGameOver {
+            isGameOver = true
             print("Player died. Game Over")
+            showGameOverText()
         }
     }
     
@@ -377,5 +385,15 @@ class GameScene: SKScene {
             SKAction.group([moveUp, fadeOut]),
             remove
         ]))
+    }
+    
+    func showGameOverText(){
+        let label = SKLabelNode(text: "GAME OVER")
+        label.fontName = "Menlo-Bold"
+        label.fontSize = 28
+        label.fontColor = .systemRed
+        label.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        label.zPosition = 30
+        addChild(label)
     }
 }
