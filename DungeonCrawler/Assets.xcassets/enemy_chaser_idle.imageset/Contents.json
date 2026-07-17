@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "enemy_idle.png",
+      "filename" : "enemy_chaser_idle.png",
       "idiom" : "universal",
       "scale" : "1x"
     },

@@ -37,12 +37,19 @@ enum EnemyType: CaseIterable {
     }
     
     var idleImageName: String {
-        "enemy_idle"
-//        switch self {
-//        case .chaser: return "enemy_chaser_idle"
-//        case .guardian: return "enemy_guardian_idle"
-//        case .coward: return "enemy_coward_idle"
-//        }
+        switch self {
+        case .chaser: return "enemy_chaser_idle"
+        case .guardian: return "enemy_guardian_idle"
+        case .coward: return "enemy_coward_idle"
+        }
+    }
+    
+    var walkAnimationName: String {
+        switch self {
+        case .chaser: return "enemy_chaser_walk"
+        case .guardian: return "enemy_guardian_walk"
+        case .coward: return "enemy_coward_walk"
+        }
     }
 }
 

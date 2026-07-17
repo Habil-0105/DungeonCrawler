@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "enemy_walk.png",
+      "filename" : "enemy_guardian_idle.png",
       "idiom" : "universal",
       "scale" : "1x"
     },

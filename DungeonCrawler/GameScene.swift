@@ -209,7 +209,7 @@ class GameScene: SKScene {
             
             enemy.gridPos = (newX, newY)
             enemy.updateNodePosition()
-            enemy.node.run(makeWalkAnimation(imageName: "enemy_walk", frameCount: 4))
+            enemy.node.run(makeWalkAnimation(imageName: enemy.type.walkAnimationName, frameCount: 4))
         }
     }
     
