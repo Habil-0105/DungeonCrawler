@@ -408,13 +408,21 @@ class GameScene: SKScene {
         ]))
     }
     
-    func showGameOverText(){
-        let label = SKLabelNode(text: "GAME OVER - Press R to Restart")
-        label.fontName = "Menlo-Bold"
-        label.fontSize = 20
-        label.fontColor = .systemRed
-        label.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        label.zPosition = 30
-        addChild(label)
+    func showGameOverText() {
+        let title = SKLabelNode(text: "GAME OVER")
+        title.fontName = "Menlo-Bold"
+        title.fontSize = 22
+        title.fontColor = .systemRed
+        title.position = CGPoint(x: size.width / 2, y: size.height / 2 + 12)
+        title.zPosition = 30
+        addChild(title)
+
+        let subtitle = SKLabelNode(text: "Press R to Restart")
+        subtitle.fontName = "Menlo"
+        subtitle.fontSize = 12
+        subtitle.fontColor = .white
+        subtitle.position = CGPoint(x: size.width / 2, y: size.height / 2 - 12)
+        subtitle.zPosition = 30
+        addChild(subtitle)
     }
 }
