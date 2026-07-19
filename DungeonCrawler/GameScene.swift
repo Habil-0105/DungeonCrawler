@@ -23,6 +23,8 @@ class GameScene: SKScene {
     
     var isGameOver = false
     
+    var playerFacing: FacingDirection = .down
+    
     override func didMove(to view: SKView) {
         backgroundColor = .black
         
@@ -71,12 +73,13 @@ class GameScene: SKScene {
     }
     
     func setupPlayer() {
-        player = SKSpriteNode(imageNamed: "player_idle")
+        player = SKSpriteNode()
         player.size = CGSize(width: GameConstants.tileSize, height: GameConstants.tileSize)
         player.zPosition = 10
         player.texture?.filteringMode = .nearest
         updatePlayerPosition()
         addChild(player)
+        updatePlayerSprite()
     }
     
     func updatePlayerPosition(){
@@ -89,6 +92,11 @@ class GameScene: SKScene {
     func tryMovePlayer(dx: Int, dy: Int){
         guard !isGameOver else { return }
         
+        if let direction = FacingDirection.from(dx: dx, dy: dy){
+            playerFacing = direction
+            updatePlayerSprite()
+        }
+        
         let newX = playerGridPos.x + dx
         let newY = playerGridPos.y + dy
         
@@ -100,11 +108,19 @@ class GameScene: SKScene {
         } else {
             playerGridPos = (newX, newY)
             updatePlayerPosition()
-            player.run(makeWalkAnimation(imageName: "player_walk", frameCount: 4))
+            
+            let animName = "player_walk_\(playerFacing.spriteSuffix)"
+            player.run(makeWalkAnimation(imageName: animName, frameCount: 4))
             run(SKAction.playSoundFileNamed("step.wav", waitForCompletion: false))
         }
         
         processEnemyTurn()
+    }
+    
+    func updatePlayerSprite(){
+        player.texture = SKTexture(imageNamed: "player_\(playerFacing.spriteSuffix)")
+        player.xScale = playerFacing.xScaleMultiplier
+        player.texture?.filteringMode = .nearest
     }
     
     override func keyDown(with event: NSEvent) {
